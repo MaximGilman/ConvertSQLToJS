@@ -10,11 +10,12 @@ namespace ConvertSQLToJS
 {
     class Program
     {
+        public static string[] Ids;
         static void Main(string[] args)
         {
             /*CASE WHEN (not(#71149641# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149641# is null))) THEN 1 ELSE 0 END*/
             string input = "CASE WHEN (not(#71149641# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149641# is null))) THEN 1 ELSE 0 END";
-          var Ids= input.GetIDsFromString();
+            Ids= input.GetIDsFromString();
 
             string codeText = string.Empty;
             int ruleKey=0;
@@ -22,7 +23,7 @@ namespace ConvertSQLToJS
 
             codeText += CreateImporstAndConsts(ruleKey, ruleName);
             codeText += CreateIDsInitialization(Ids);
-
+            codeText += input.ToLower().createIfCondition();
 
         }
         static string CreateImporstAndConsts(int ruleKey, string ruleName)
@@ -77,11 +78,15 @@ const ruleName = '" + ruleName + "';\n" +
         }
         public static string createIfCondition(this string input)
         {
-            string jsInput = string.Empty;
-             if(input.ToLower().Contains("case when")) { jsInput = Replacer.ReplaceCase(input); }
+            string jsInput = input;
+            jsInput = Replacer.ReplaceCase(jsInput);
+            jsInput = Replacer.ReplaceNot(jsInput);
+            jsInput = Replacer.ReplaceOr(jsInput);
+            jsInput = Replacer.ReplaceAnd(jsInput);
+            jsInput = Replacer.ReplaceIsNull(jsInput);
 
 
-            return input;
+            return jsInput;
         }
     }
     public static class Replacer
@@ -106,7 +111,7 @@ const ruleName = '" + ruleName + "';\n" +
         public static string ReplaceIsNull(string str)
         {
 
-            return Regex.(str.ToLower(), @"#\d+# is null", "" );
+            return Regex.Replace(str.ToLower(), @"#\d+# is null", "" );
                 
               
         }
