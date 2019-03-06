@@ -14,7 +14,7 @@ namespace ConvertSQLToJS
         static void Main(string[] args)
         {
             /*CASE WHEN (not(#71149641# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149641# is null))) THEN 1 ELSE 0 END*/
-            string input = "CASE WHEN (not(#71149641# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149641# is null))) THEN 1 ELSE 0 END";
+            string input = "CASE WHEN (not(#71149661# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149661# is null))) THEN 1 ELSE 0 END";
             Ids= input.GetIDsFromString();
 
             string codeText = string.Empty;
