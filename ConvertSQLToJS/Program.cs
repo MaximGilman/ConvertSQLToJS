@@ -14,7 +14,7 @@ namespace ConvertSQLToJS
         static void Main(string[] args)
         {
             /*CASE WHEN (not(#71149641# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149641# is null))) THEN 1 ELSE 0 END*/
-            string input = "CASE WHEN (not(#71149661# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149661# is null))) THEN 1 ELSE 0 END";
+            string input = "CASE WHEN (not(#71149661# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149621# is null))) THEN 1 ELSE 0 END";
             Ids= input.GetIDsFromString();
 
             string codeText = string.Empty;
@@ -24,7 +24,7 @@ namespace ConvertSQLToJS
             codeText += CreateImporstAndConsts(ruleKey, ruleName);
             codeText += CreateIDsInitialization(Ids);
             codeText += input.ToLower().createIfCondition();
-
+            //if( 1==1 && (codeText==null ? 1 : 2) == 1) { }
         }
         static string CreateImporstAndConsts(int ruleKey, string ruleName)
         {
@@ -110,10 +110,21 @@ const ruleName = '" + ruleName + "';\n" +
         }
         public static string ReplaceIsNull(string str)
         {
+            string newStr = str;
+            var matches = Regex.Matches(str, @"#\d+# is null")
+                .Cast<Match>()
+                .ToArray();
+             foreach (var match in matches)
+             {
+                 string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#","");
 
-            return Regex.Replace(str.ToLower(), @"#\d+# is null", "" );
+                newStr = str.Replace(match.Value, $"isEmpty(ID{ID})");
+             }
+
+            return newStr;
                 
               
         }
+
     }
 }
