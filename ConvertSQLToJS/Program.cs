@@ -21,10 +21,20 @@ namespace ConvertSQLToJS
             int ruleKey=0;
             string ruleName="";
 
+            codeText += CreateHeader();
             codeText += CreateImporstAndConsts(ruleKey, ruleName);
             codeText += CreateIDsInitialization(Ids);
             codeText += input.ToLower().createIfCondition();
-            //if( 1==1 && (codeText==null ? 1 : 2) == 1) { }
+
+            codeText += "\n"+"".createError(Ids.First());
+            codeText += "};";
+            
+
+
+        }
+        static string CreateHeader(string author = "Gilman M.M", string mail = "gilman.mm@parma.ru")
+        {
+            return $"/*THIS  CODE WAS GENERATED AUTOMATICALLY  at {DateTime.Now}  By {author}. E-mail {mail}.*/\n";
         }
         static string CreateImporstAndConsts(int ruleKey, string ruleName)
         {
@@ -83,18 +93,38 @@ const ruleName = '" + ruleName + "';\n" +
             jsInput = Replacer.ReplaceNot(jsInput);
             jsInput = Replacer.ReplaceOr(jsInput);
             jsInput = Replacer.ReplaceAnd(jsInput);
+            jsInput = Replacer.ReplaceEnd(jsInput);
+            jsInput = Replacer.ReplaceNvl(jsInput);
             jsInput = Replacer.ReplaceIsNull(jsInput);
 
 
             return jsInput;
         }
+        public static string createError(this string input, string id1, string id2="")
+        {
+            string error = $"{{" +
+                $" ErrorHelper.addNeedValueError(" +
+                $"reqID{id1},"+
+                $"0," + 
+                $"ruleKey," + 
+                $"ruleName," + 
+                $"[], " + 
+                $"{id2}" +
+                  $");" +
+                  $"}}";
+ 
+
+
+            return error;
+        }
+
     }
     public static class Replacer
     {
 
         public static string ReplaceCase(string str)
         {
-            return str.ToLower().Replace("case when", "if ");
+            return str.ToLower().Replace("case when", "if( ");
         }
         public static string ReplaceNot(string str)
         {
@@ -108,6 +138,27 @@ const ruleName = '" + ruleName + "';\n" +
         {
             return str.ToLower().Replace("or", " || ");
         }
+        //
+        public static string ReplaceEnd(string str)
+        {
+            return str.ToUpper().Replace("THEN 1 ELSE 0 END", " ) ").ToLower();
+        }
+        public static string ReplaceNvl(string str)
+        {
+            string newStr = str;
+            var matches = Regex.Matches(str, @"nvl\(#\d+#, -1\) in \(\d+\)")
+                .Cast<Match>()
+                .ToArray();
+            foreach (var match in matches)
+            {
+                string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#", "");
+                string IN = match.Value.Split('(').Last().Replace(")","") ;
+
+                newStr = newStr.Replace(match.Value, $"valueIn((valueID{ID}==null? -1:valueID{ID}), [{IN}])");
+            }
+
+            return newStr;
+        }
         public static string ReplaceIsNull(string str)
         {
             string newStr = str;
@@ -118,7 +169,7 @@ const ruleName = '" + ruleName + "';\n" +
              {
                  string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#","");
 
-                newStr = str.Replace(match.Value, $"isEmpty(ID{ID})");
+                newStr = newStr.Replace(match.Value, $"isEmpty(ID{ID})");
              }
 
             return newStr;
