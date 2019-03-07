@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -13,13 +14,14 @@ namespace ConvertSQLToJS
         public static string[] Ids;
         static void Main(string[] args)
         {
-            /*CASE WHEN (not(#71149641# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149641# is null))) THEN 1 ELSE 0 END*/
-            string input = "CASE WHEN (not(#71149661# is null)) and (nvl(#71149481#, -1) IN (34208411)) or not((not(#71149621# is null))) THEN 1 ELSE 0 END";
+            string ruleKey = "";
+            string ruleName = "";
+            string input;
+            read(out input, out ruleKey, out ruleName);
             Ids= input.GetIDsFromString();
 
             string codeText = string.Empty;
-            int ruleKey=0;
-            string ruleName="";
+           
 
             codeText += CreateHeader();
             codeText += CreateImporstAndConsts(ruleKey, ruleName);
@@ -28,15 +30,35 @@ namespace ConvertSQLToJS
 
             codeText += "\n"+"".createError(Ids.First());
             codeText += "};";
+
+            write(codeText);
+
+
+        }
+
+        static void read( out string input, out string id, out string title,string fileName = "input.txt")
+        {
+
+            using (var reader = new StreamReader(fileName, encoding: Encoding.GetEncoding(1251)))
+            {
+                id = reader.ReadLine();
+                title = reader.ReadLine();
+                input = reader.ReadToEnd();
+
+            }
+            return ;
+        }
+        static void write(string answer, string fileName = "output.txt")
+        {
             
-
-
+            File.WriteAllText(fileName, answer + Environment.NewLine, Encoding.UTF8);
+            return;
         }
         static string CreateHeader(string author = "Gilman M.M", string mail = "gilman.mm@parma.ru")
         {
-            return $"/*THIS  CODE WAS GENERATED AUTOMATICALLY  at {DateTime.Now}  By {author}. E-mail {mail}.*/\n";
+            return $"/*THIS  CODE WAS GENERATED AUTOMATICALLY  at {DateTime.Now}  By {author}. E-mail {mail}.*/"+"\n";
         }
-        static string CreateImporstAndConsts(int ruleKey, string ruleName)
+        static string CreateImporstAndConsts(string ruleKey, string ruleName)
         {
           return  @"import getReqValue from 'storage/FLC/basic/getReqValue';
 import isEmpty from 'storage/FLC/extended/isEmpty';
@@ -146,7 +168,7 @@ const ruleName = '" + ruleName + "';\n" +
         public static string ReplaceNvl(string str)
         {
             string newStr = str;
-            var matches = Regex.Matches(str, @"nvl\(#\d+#, -1\) in \(\d+\)")
+            var matches = Regex.Matches(str, @"nvl\(#\d+#, -1\) in \((\d)*(,)*(\d)*\)")
                 .Cast<Match>()
                 .ToArray();
             foreach (var match in matches)
@@ -169,12 +191,21 @@ const ruleName = '" + ruleName + "';\n" +
              {
                  string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#","");
 
-                newStr = newStr.Replace(match.Value, $"isEmpty(ID{ID})");
+                newStr = newStr.Replace(match.Value, $"isEmpty(valueID{ID})");
              }
 
             return newStr;
                 
               
+        }
+
+        public static string ReplaceRegex(string str)
+        {
+            /* REGEXP_LIKE(#71153951#, '^(\d){1}\.(\d){2}\.([A-Z0-9А-Я]){8}\.(\d){6}$')*/
+
+            //var expr = new RegExp(pattern [, flags]);
+
+            return str;
         }
 
     }
