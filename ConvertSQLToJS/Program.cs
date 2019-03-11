@@ -31,10 +31,17 @@ namespace ConvertSQLToJS
             codeText += "\n"+"".createError(Ids.First());
             codeText += "};";
 
-            write(codeText, needToCreateDir:true, dirPath: @"C:\\Users\\Gilman.MM\\Documents\\JS_Projects\\5990464 Условная обязательность с диапазоном", dirName: ruleKey);
+         string   dirPath= readDir();
+            write(codeText, needToCreateDir:true, dirPath: dirPath, dirName: ruleKey);
 
 
         }
+
+        private static string readDir(string path="directory.txt")
+        {
+            return File.ReadAllText(path,Encoding.UTF8);
+        }
+
         static void WriteWithDirectory(string path )
         {
             System.IO.Directory.CreateDirectory(path);
