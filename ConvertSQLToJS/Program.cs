@@ -129,6 +129,7 @@ const ruleName = '" + ruleName + "';\n" +
             jsInput = JS_Replacer.ReplaceNvl(jsInput);
             jsInput = JS_Replacer.ReplaceIsNull(jsInput);
             jsInput = JS_Replacer.ReplaceLength(jsInput);
+            jsInput = JS_Replacer.ReplaceDate(jsInput);
 
 
             return jsInput;
@@ -179,7 +180,7 @@ const ruleName = '" + ruleName + "';\n" +
         public static string ReplaceNvl(string str)
         {
             string newStr = str;
-            var matches = Regex.Matches(str, @"nvl\(#\d+#, -1\) in \((\d)*(,)*(\d)*\)")
+            var matches = Regex.Matches(str, @"nvl\(#\d+#, -1\) in \(((\d)*(,)*)+\)")
                 .Cast<Match>()
                 .ToArray();
             foreach (var match in matches)
@@ -192,7 +193,23 @@ const ruleName = '" + ruleName + "';\n" +
 
             return newStr;
         }
-        public static string ReplaceIsNull(string str)
+        public static string ReplaceDate(string str)
+        {
+            string newStr = str;
+            var matches = Regex.Matches(str, @"#\d+#")
+                .Cast<Match>()
+                .ToArray();
+            foreach (var match in matches)
+            {
+                string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#", "");
+
+                newStr = newStr.Replace(match.Value, $"valueID{ID}");
+            }
+
+            return newStr;
+        }
+
+            public static string ReplaceIsNull(string str)
         {
             string newStr = str;
             var matches = Regex.Matches(str, @"#\d+# is null")
