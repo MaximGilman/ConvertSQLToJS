@@ -31,11 +31,20 @@ namespace ConvertSQLToJS
             codeText += "\n"+"".createError(Ids.First());
             codeText += "};";
 
-            write(codeText);
+            write(codeText, needToCreateDir:true, dirPath: @"C:\\Users\\Gilman.MM\\Documents\\JS_Projects\\5990464 Условная обязательность с диапазоном", dirName: ruleKey);
 
 
         }
+        static void WriteWithDirectory(string path )
+        {
+            System.IO.Directory.CreateDirectory(path);
+             
+        }
+        static void WriteWithDirectory_File(string path, string answer)
+        {
+            System.IO.File.WriteAllText(path+"/main.js", answer);
 
+        }
         static void read( out string input, out string id, out string title,string fileName = "input.txt")
         {
 
@@ -48,10 +57,11 @@ namespace ConvertSQLToJS
             }
             return ;
         }
-        static void write(string answer, string fileName = "output.txt")
+        static void write(string answer, string fileName = "output.txt", bool needToCreateDir = false, string dirPath="" ,string dirName ="")
         {
             
             File.WriteAllText(fileName, answer + Environment.NewLine, Encoding.UTF8);
+            if (needToCreateDir) { WriteWithDirectory(dirPath + "/" + dirName); WriteWithDirectory_File(dirPath + "/" + dirName, answer); }
             return;
         }
         static string CreateHeader(string author = "Gilman M.M", string mail = "gilman.mm@parma.ru")
@@ -111,13 +121,14 @@ const ruleName = '" + ruleName + "';\n" +
         public static string createIfCondition(this string input)
         {
             string jsInput = input;
-            jsInput = Replacer.ReplaceCase(jsInput);
-            jsInput = Replacer.ReplaceNot(jsInput);
-            jsInput = Replacer.ReplaceOr(jsInput);
-            jsInput = Replacer.ReplaceAnd(jsInput);
-            jsInput = Replacer.ReplaceEnd(jsInput);
-            jsInput = Replacer.ReplaceNvl(jsInput);
-            jsInput = Replacer.ReplaceIsNull(jsInput);
+            jsInput = JS_Replacer.ReplaceCase(jsInput);
+            jsInput = JS_Replacer.ReplaceNot(jsInput);
+            jsInput = JS_Replacer.ReplaceOr(jsInput);
+            jsInput = JS_Replacer.ReplaceAnd(jsInput);
+            jsInput = JS_Replacer.ReplaceEnd(jsInput);
+            jsInput = JS_Replacer.ReplaceNvl(jsInput);
+            jsInput = JS_Replacer.ReplaceIsNull(jsInput);
+            jsInput = JS_Replacer.ReplaceLength(jsInput);
 
 
             return jsInput;
@@ -141,7 +152,7 @@ const ruleName = '" + ruleName + "';\n" +
         }
 
     }
-    public static class Replacer
+    public static class JS_Replacer
     {
 
         public static string ReplaceCase(string str)
@@ -207,6 +218,22 @@ const ruleName = '" + ruleName + "';\n" +
 
             return str;
         }
+        public static string ReplaceLength(string str)
+        {
+            string newStr = str;
+            var matches = Regex.Matches(str, @"length\(#\d+#\)")
+                .Cast<Match>()
+                .ToArray();
+            foreach (var match in matches)
+            {
+                string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#", "");
+                var operation = (newStr.Substring(newStr.IndexOf(match.Value)).Replace(" ","")).Split(')')[2];
 
+                newStr = newStr.Replace(match.Value, $"valueID{ID}.length{operation}");
+            }
+
+            return newStr;
+            return str;
+        }
     }
 }
