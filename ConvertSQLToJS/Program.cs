@@ -137,6 +137,10 @@ const ruleName = '" + ruleName + "';\n" +
             jsInput = JS_Replacer.ReplaceNvl(jsInput);
             jsInput = JS_Replacer.ReplaceIsNull(jsInput);
             jsInput = JS_Replacer.ReplaceLength(jsInput);
+            jsInput = JS_Replacer.ReplaceRegex(jsInput);
+
+
+            //Оставить последним поскольку метод заменяет все неиспользованные #ID# на valueID, обработчики выше ищут в строках именно #ID#
             jsInput = JS_Replacer.ReplaceDate(jsInput);
 
 
@@ -246,15 +250,14 @@ const ruleName = '" + ruleName + "';\n" +
 
             /*(/{regex}/.test(valueID{}))*/
             string newStr = str;
-            var matches = Regex.Matches(str, @"REGEXP_LIKE\(#\d+#\),\'\^(\S)+\$\'")
+            var matches = Regex.Matches(str, @"regexp_like\(#\d+#,.*\'\^(\S)+\$\'\)")
                 .Cast<Match>()
                 .ToArray();
             foreach (var match in matches)
             {
+                string regex = match.Value.Substring(match.Value.IndexOf(@"'")).Replace(@"'",@"/").TrimEnd(')');
                 string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#", "");
-                var operation = (newStr.Substring(newStr.IndexOf(match.Value)).Replace(" ", "")).Split(')')[2];
-
-                newStr = newStr.Replace(match.Value, $"valueID{ID}.length{operation}");
+                newStr = newStr.Replace(match.Value, $"{regex}.test(valueID{ID})");
             }
 
             return newStr;
