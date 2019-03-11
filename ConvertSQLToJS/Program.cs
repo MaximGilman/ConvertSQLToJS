@@ -11,6 +11,7 @@ namespace ConvertSQLToJS
 {
     class Program
     {
+        static bool isTest = false;
         public static string[] Ids;
         static void Main(string[] args)
         {
@@ -32,7 +33,7 @@ namespace ConvertSQLToJS
             codeText += "};";
 
          string   dirPath= readDir();
-            write(codeText, needToCreateDir:true, dirPath: dirPath, dirName: ruleKey);
+            write(codeText, needToCreateDir: isTest , dirPath: dirPath, dirName: ruleKey);
 
 
         }
@@ -234,13 +235,29 @@ const ruleName = '" + ruleName + "';\n" +
               
         }
 
+        /// <summary>
+        /// Replace all Regex Sql exp 
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
         public static string ReplaceRegex(string str)
         {
             /* REGEXP_LIKE(#71153951#, '^(\d){1}\.(\d){2}\.([A-Z0-9А-Я]){8}\.(\d){6}$')*/
 
-            //var expr = new RegExp(pattern [, flags]);
+            /*(/{regex}/.test(valueID{}))*/
+            string newStr = str;
+            var matches = Regex.Matches(str, @"REGEXP_LIKE\(#\d+#\),\'\^(\S)+\$\'")
+                .Cast<Match>()
+                .ToArray();
+            foreach (var match in matches)
+            {
+                string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#", "");
+                var operation = (newStr.Substring(newStr.IndexOf(match.Value)).Replace(" ", "")).Split(')')[2];
 
-            return str;
+                newStr = newStr.Replace(match.Value, $"valueID{ID}.length{operation}");
+            }
+
+            return newStr;
         }
         public static string ReplaceLength(string str)
         {
@@ -257,7 +274,6 @@ const ruleName = '" + ruleName + "';\n" +
             }
 
             return newStr;
-            return str;
-        }
+         }
     }
 }
