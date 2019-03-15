@@ -15,26 +15,53 @@ namespace ConvertSQLToJS
         public static string[] Ids;
         static void Main(string[] args)
         {
+         var str=   generateMain();
+            //DirMover.RenameAndMoveFile(@"C:\Users\Gilman.MM\Documents\JS_Projects");
+           // MoveDirs("JS_Projects");
+           // Run();
+        }
+
+        private static string generateMain()
+        {
+            string rule = "rule";
+            string fImport = "import checkFLC from 'core/checkFLC';\n";
+           var files=  Directory.GetFiles("JS_Projects");
+            string output = "";
+            output += fImport;
+            int index = 0;
+            foreach (var item in files)
+            {
+                output += $"import {rule}{++index} from './{item.Split('\\').Last()}';\n";
+            }
+            return output;
+        }
+
+        private static void MoveDirs(string fullPath)
+        {
+            DirMover.AddDirAndMoveFile(fullPath);
+        }
+
+        private static void Run()
+        {
             string ruleKey = "";
             string ruleName = "";
             string input;
             read(out input, out ruleKey, out ruleName);
-            Ids= input.GetIDsFromString();
+            Ids = input.GetIDsFromString();
 
             string codeText = string.Empty;
-           
+
 
             codeText += CreateHeader();
             codeText += CreateImporstAndConsts(ruleKey, ruleName);
             codeText += CreateIDsInitialization(Ids);
             codeText += input.ToLower().createIfCondition();
 
-            codeText += "\n"+"".createError(Ids.First());
+            codeText += "\n" + "".createError(Ids.First());
             codeText += "};";
 
-         string   dirPath= readDir();
-            write(codeText, needToCreateDir: isTest , dirPath: dirPath, dirName: ruleKey);
-
+            string dirPath = readDir();
+            write(codeText, needToCreateDir: isTest, dirPath: dirPath, dirName: ruleKey);
 
         }
 
@@ -246,18 +273,28 @@ const ruleName = '" + ruleName + "';\n" +
         /// <returns></returns>
         public static string ReplaceRegex(string str)
         {
-            /* REGEXP_LIKE(#71153951#, '^(\d){1}\.(\d){2}\.([A-Z0-9А-Я]){8}\.(\d){6}$')*/
+            string newStr = str;
+            newStr = ReplaseIKUDNumberFormat(newStr);
 
-            /*(/{regex}/.test(valueID{}))*/
+
+
+            return newStr;
+
+        }
+        public static string ReplaseIKUDNumberFormat(string str)
+        {
             string newStr = str;
             var matches = Regex.Matches(str, @"regexp_like\(#\d+#,.*\'\^(\S)+\$\'\)")
                 .Cast<Match>()
                 .ToArray();
             foreach (var match in matches)
             {
-                string regex = match.Value.Substring(match.Value.IndexOf(@"'")).Replace(@"'",@"/").TrimEnd(')');
+               
                 string ID = Regex.Match(match.Value, @"#\d+#").Value.Replace("#", "");
-                newStr = newStr.Replace(match.Value, $"{regex}.test(valueID{ID})");
+                newStr = newStr.Replace(match.Value, $"checkIKUDNumberFormat(reqID{ID})");
+                // if need to work with values
+                //newStr = newStr.Replace(match.Value, $"checkIKUDNumberFormat(valueID{ID})");
+
             }
 
             return newStr;
